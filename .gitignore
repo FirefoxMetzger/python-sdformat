@@ -1,0 +1,6 @@
+/**/__pycache/
+.vscode/
+dist/
+
+*.pyc
+poetry.lock
