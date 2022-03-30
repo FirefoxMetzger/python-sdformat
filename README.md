@@ -1,9 +1,9 @@
 # PySDF (python-sdformat)
 
-PySDF is a set of python bindings for SDFormat XML. The idea is to provide a
-method for working with SDF that feels as fast as (or faster than) XML, but with
-the added convenience of syntax highlighting, auto-completion, validation, and
-some degree of verification.
+PySDF is a set of python bindings for [SDFormat XML](http://sdformat.org/). The
+idea is to provide a method for working with SDF that feels as fast as (or
+faster than) XML, but with the added convenience of syntax highlighting,
+auto-completion, validation, and some degree of verification.
 
 The current bindings read SDF from _any_ version and will parse it into a
 generic representation. Modifications are not validated or verified by default,
