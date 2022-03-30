@@ -3,6 +3,7 @@ import warnings
 import importlib
 import numpy as np
 
+
 class Element:
     def __init__(
         self,
@@ -21,9 +22,9 @@ class Element:
 
     def __set_name__(self, owner, name):
         # pirated to register element
-        
+
         if self.clazz is None:
-            # clazz is None means the element 
+            # clazz is None means the element
             # can be nested inside itself.
             self.clazz = owner
 
@@ -94,8 +95,21 @@ class Attribute:
 
 
 class ChildElement(Element):
-    def __init__(self, binding_class, required, *, removed_in: str = None, alternative: str = None) -> None:
-        super().__init__(binding_class, required, default=None, removed_in=removed_in, alternative=alternative)
+    def __init__(
+        self,
+        binding_class,
+        required,
+        *,
+        removed_in: str = None,
+        alternative: str = None,
+    ) -> None:
+        super().__init__(
+            binding_class,
+            required,
+            default=None,
+            removed_in=removed_in,
+            alternative=alternative,
+        )
 
     def __get__(self, instance, owner):
         super().__get__(instance, owner)
@@ -119,16 +133,30 @@ class ChildElement(Element):
 
 
 class SimpleElement(Element):
-    def __init__(self, required:str, default, *, removed_in: str = None, alternative: str = None, tag:str=None) -> None:
+    def __init__(
+        self,
+        required: str,
+        default,
+        *,
+        removed_in: str = None,
+        alternative: str = None,
+        tag: str = None,
+    ) -> None:
         self.tag = tag
 
-        super().__init__(None, required, default, removed_in=removed_in, alternative=None)
+        super().__init__(
+            None, required, default, removed_in=removed_in, alternative=None
+        )
 
     def __set_name__(self, owner, name):
         from .base import SdfElement
 
-        class_name = ''.join(word.title() for word in name.split('_'))
-        setattr(owner, class_name, type(class_name, (SdfElement,), {"tag": self.tag or name}))
+        class_name = "".join(word.title() for word in name.split("_"))
+        setattr(
+            owner,
+            class_name,
+            type(class_name, (SdfElement,), {"tag": self.tag or name}),
+        )
         self.clazz = getattr(owner, class_name)
 
         super().__set_name__(owner, name)
@@ -224,7 +252,7 @@ class BoolElement(SimpleElement):
     def __get__(self, instance, owner):
         text = super().__get__(instance, owner)
         return text in ["True", "true", "1"]
-    
+
     def __set__(self, instance, value):
         child = self._find_child_element(instance)
         if child is None:
@@ -244,7 +272,7 @@ class FloatElement(SimpleElement):
         text = super().__get__(instance, owner)
 
         return float(text)
-    
+
     def __set__(self, instance, value):
         child = self._find_child_element(instance)
         if child is None:
@@ -265,7 +293,7 @@ class IntegerElement(SimpleElement):
     def __get__(self, instance, owner):
         text = super().__get__(instance, owner)
         return int(text)
-    
+
     def __set__(self, instance, value):
         child = self._find_child_element(instance)
         if child is None:
@@ -284,7 +312,7 @@ class StringElement(SimpleElement):
     def __get__(self, instance, owner):
         text = super().__get__(instance, owner)
         return text
-    
+
     def __set__(self, instance, value):
         child = self._find_child_element(instance)
         if child is None:

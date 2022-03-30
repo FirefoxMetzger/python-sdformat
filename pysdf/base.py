@@ -6,6 +6,10 @@ from .sdf_types import *
 # TODO: make pose bindings nicer (allow default="0 0 0 0 0 0")
 
 
+def _make_CamelCase(x):
+    return "".join(word.title() for word in x.split("_"))
+
+
 class SdfElement:
     """The base class for all SDF elements."""
 
@@ -103,6 +107,58 @@ class SdfElement:
 
         for item in other:
             self.children.append(item)
+
+    def _iter_impl(
+        self, reversed_parts: str, reversed_parents: List["SdfElement"]
+    ) -> "SdfElement":
+        reversed_parents = [self] + reversed_parents
+
+        for child in self.children:
+            reversed_path = [child] + reversed_parents
+            for part, element in zip(reversed_parts, reversed_path):
+                if element.__class__.__name__ != part:
+                    break
+            else:
+                yield child
+
+        for child in self.children:
+            yield from child._iter_impl(reversed_parts, reversed_parents)
+
+    def iter(self, filter: str = None) -> "SdfElement":
+        """Iterate over SDF elements
+
+        This function recursively iterates over all elements in the current
+        subtree (breadth-first) and yields them. If ``filter`` is not None, only
+        those elements matching the filter will be returned. Filters are
+        selectors on the tail end of the element's path from the root node to
+        the element and are separated by the "/" character. For example,
+        ``filter="pose"`` will return all pose elements in the tree and
+        ``filter="link/pose"`` will return all pose elements that are children
+        of link elements.
+
+        Parameters
+        ----------
+        filter : str
+            If not None, elements are filtered based on this string. The filter
+            applies to the tail end of the path to the (recursive) child, and is
+            a relative path.
+
+        Yields
+        ------
+
+        child : SdfElement
+            A recursive child element that matches the given filter (if any) in
+            breadth-first order.
+
+        """
+        if filter is not None:
+            reversed_parts = [x for x in reversed(filter.split("/"))]
+        else:
+            reversed_parts = list()
+
+        reversed_parts = [x for x in map(_make_CamelCase, reversed_parts)]
+
+        yield from self._iter_impl(reversed_parts, list())
 
 
 class UnknownElement(SdfElement):
