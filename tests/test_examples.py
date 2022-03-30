@@ -193,4 +193,10 @@ def test_iter_and_filter(tmp_path):
     for link in element.models[0].iter("link"):
         link.self_collide = False
 
+    # offset all links by some vector
+    for pose in element.iter("link/pose"):
+        pose_ndarray = np.fromstring(pose.text, count=6, sep=" ")
+        pose_ndarray[:3] += (0, 0, 1)
+        pose.text = " ".join(map(str, pose_ndarray))
+
     element.to_file(tmp_path / "sample.sdf", pretty_print=True)

@@ -61,11 +61,17 @@ sdf_string = SDF.to_xml()
 # file round-trip
 SDF.to_file("sample.sdf")
 parsed = SDF.from_file("sample.sdf")
+
+# prettify/reformat SDF to have nice indentation
+SDF.to_file("sample.sdf", remove_blank_text=True)
+parsed = SDF.from_file("sample.sdf", pretty_print=True)
+
 ```
 
 **Building SDF manually**
 
 ```python
+from pysdf import SDF; Link, Joint
 
 reference_sdf = """
 <sdf version="1.6">
@@ -96,7 +102,7 @@ element = SDF(
     version="1.6",
 )
 
-element.to_file(tmp_path / "sample.sdf", pretty_print=True)
+element.to_file("sample.sdf", pretty_print=True)
 ```
 
 **Basic Modifications**
@@ -284,6 +290,12 @@ for link in element.iter("model/model/link"):
 # turn self-collision off (using a different syntax)
 for link in element.models[0].iter("link"):
     link.self_collide = False
+
+# offset all links by some vector
+for pose in element.iter("link/pose"):
+    pose_ndarray = np.fromstring(pose.text, count=6, sep=" ")
+    pose_ndarray[:3] += (0, 0, 1)
+    pose.text = " ".join(map(str, pose_ndarray))
 
 element.to_file("sample.sdf", pretty_print=True)
 ```
