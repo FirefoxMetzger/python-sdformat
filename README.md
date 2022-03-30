@@ -96,6 +96,7 @@ element = SDF(
             # attributes are set at the end
             # because python only accepts kwargs at the end.
             name="joint",
+            type="fixed",
         ),
         name="empty_axis",
     ),

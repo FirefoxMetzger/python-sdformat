@@ -200,3 +200,37 @@ def test_iter_and_filter(tmp_path):
         pose.text = " ".join(map(str, pose_ndarray))
 
     element.to_file(tmp_path / "sample.sdf", pretty_print=True)
+
+
+def test_create_sdf(tmp_path):
+    reference_sdf = """
+    <sdf version="1.6">
+        <model name="empty_axis">
+            <link name="link1" />
+            <link name="link2" />
+            <joint name="joint" type="fixed">
+                <parent>link1</parent>
+                <child>link2</child>
+            </joint>
+        </model>
+    </sdf>
+    """
+
+    element = SDF(
+        Model(
+            Link(name="link1"),
+            Link(name="link2"),
+            Joint(
+                Joint.Parent(text="link1"),
+                Joint.Child(text="link2"),
+                # attributes are set at the end
+                # because python only accepts kwargs at the end.
+                name="joint",
+                type="fixed",
+            ),
+            name="empty_axis",
+        ),
+        version="1.6",
+    )
+
+    element.to_file(tmp_path / "sample.sdf", pretty_print=True)
