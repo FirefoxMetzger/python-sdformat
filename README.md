@@ -56,15 +56,15 @@ sample_sdf = """<?xml version="1.0" ?>
 
 # string round-trip
 parsed = SDF.from_xml(sample_sdf)
-sdf_string = SDF.to_xml()
+sdf_string = parsed.to_xml()
 
 # file round-trip
-SDF.to_file("sample.sdf")
+parsed.to_file("sample.sdf")
 parsed = SDF.from_file("sample.sdf")
 
 # prettify/reformat SDF to have nice indentation
-SDF.to_file("sample.sdf", remove_blank_text=True)
-parsed = SDF.from_file("sample.sdf", pretty_print=True)
+parsed = SDF.from_file(sample_sdf, remove_blank_text=True)
+parsed.to_file("sample.sdf", pretty_print=True)
 
 ```
 
