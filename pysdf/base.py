@@ -80,7 +80,9 @@ class SdfElement:
         return out
 
     @classmethod
-    def from_xml(cls, sdf_string: str, *, remove_blank_text=True) -> "SdfElement":
+    def from_xml(
+        cls, sdf_string: str, *, remove_blank_text: bool = False
+    ) -> "SdfElement":
         """Decode XML."""
 
         parser = ET.XMLParser(remove_blank_text=remove_blank_text)

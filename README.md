@@ -63,7 +63,7 @@ parsed.to_file("sample.sdf")
 parsed = SDF.from_file("sample.sdf")
 
 # prettify/reformat SDF to have nice indentation
-parsed = SDF.from_file(sample_sdf, remove_blank_text=True)
+parsed = SDF.from_file("sample.sdf", remove_blank_text=True)
 parsed.to_file("sample.sdf", pretty_print=True)
 
 ```
@@ -71,7 +71,7 @@ parsed.to_file("sample.sdf", pretty_print=True)
 **Building SDF manually**
 
 ```python
-from pysdf import SDF; Link, Joint
+from pysdf import SDF, Link, Joint, Model
 
 reference_sdf = """
 <sdf version="1.6">
@@ -161,7 +161,7 @@ sample_sdf = """<?xml version="1.0" ?>
 </sdf>
 """
 
-parsed = SDF.from_xml(sample_sdf)
+parsed = SDF.from_xml(sample_sdf, remove_blank_text=True)
 model = parsed.model
 
 model.name = "modified_model"
@@ -170,6 +170,8 @@ model.links[1].add(Link.ParticleEmitter(
     name="my_emitter",
     type="box"
 ))
+
+parsed.to_file("sample.sdf", pretty_print=True)
 ```
 
 **Iterating and Filtering**
