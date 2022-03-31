@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "python-sdformat"
-version = "0.2.3"
+version = "0.3.0"
 description = "Python Parser for SDFormat files."
 authors = ["FirefoxMetzger <sebastian@wallkoetter.net>"]
 license = "BSD-2-Clause"
@@ -15,7 +15,7 @@ readme = "README.md"
 repository = "https://github.com/FirefoxMetzger/python-sdformat"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.7"
 lxml = "^4.8.0"
 numpy = "^1.0"
 
