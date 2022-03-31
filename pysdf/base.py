@@ -1,5 +1,6 @@
 from typing import Dict, List, Set, Type, Union, Iterable, Any
 import lxml.etree as ET
+import warnings
 
 from .sdf_types import *
 
@@ -162,6 +163,41 @@ class SdfElement:
 
         yield from self._iter_impl(reversed_parts, list())
 
+    def declared_frames(self, *, is_root: bool = True) -> List[str]:
+        """A list of all frames declared in in the sub-tree.
+
+        Lists all frames (explicit or implicit) that are defined in the subtree.
+        If a frame is contained inside a nested scope, a namespace will be
+        prepended using the `::` separator.
+
+        Parameters
+        ----------
+        is_root : bool
+            If true, this element is the element on which declared_frames
+            was called by the user. It is useful during recursion, but users
+            don't usually have to specify this.
+
+        Returns
+        -------
+        frames : List[str]
+            A list of (namespaced) frames defined in this scope.
+
+        """
+
+        frames = list()
+        for child in self.children:
+            for frame in child.declared_frames(is_root=False):
+                if frame in frames:
+                    warnings.warn(
+                        f"The following frame is defined more "
+                        "than once: `{frame}`.",
+                        RuntimeWarning,
+                    )
+                else:
+                    frames.append(frame)
+
+        return frames
+
 
 class UnknownElement(SdfElement):
     """A unknown/non-standard Element
@@ -250,6 +286,9 @@ class Frame(SdfElement):
     attached_to = Attribute(str, "0")
 
     pose = ChildElement(Pose, "0")
+
+    def declared_frames(self, *, is_root: bool = True) -> List[str]:
+        return [self.name]
 
 
 class Plugin(SdfElement):
@@ -1032,6 +1071,19 @@ class Joint(SdfElement):
     pose = ChildElement(Pose, "0")
     sensor = ChildElement(Sensor, "0")
 
+    def declared_frames(self, *, is_root: bool = True) -> List[str]:
+        frames = [self.name]
+        for frame in super().declared_frames(is_root=False):
+            if frame in frames:
+                warnings.warn(
+                    "The following frame is defined more "
+                    f"than once: `{frame}`.",
+                    RuntimeWarning,
+                )
+            else:
+                frames.append(frame)
+        return frames
+
 
 class Link(SdfElement):
     tag = "link"
@@ -1140,6 +1192,19 @@ class Link(SdfElement):
     lights = ChildElement(Light, "*")
     particle_emitters = ChildElement(ParticleEmitter, "*")
 
+    def declared_frames(self, *, is_root: bool = True) -> List[str]:
+        frames = [self.name]
+        for frame in super().declared_frames(is_root=False):
+            if frame in frames:
+                warnings.warn(
+                    "The following frame is defined more "
+                    f"than once: `{frame}`.",
+                    RuntimeWarning,
+                )
+            else:
+                frames.append(frame)
+        return frames
+
 
 class Include(SdfElement):
     tag = "include"
@@ -1187,6 +1252,27 @@ class Model(SdfElement):
     joints = ChildElement(Joint, "*")
     plugin = ChildElement(Plugin, "*")
     gripper = ChildElement(Gripper, "*")
+
+    def declared_frames(self, *, is_root: bool = True) -> List[str]:
+        if is_root:
+            frames = ["__model__", self.name]
+        else:
+            frames = [self.name]
+
+        for frame in super().declared_frames(is_root=False):
+            if not is_root:
+                frame = self.name + "::" + frame
+            
+            if frame in frames:
+                warnings.warn(
+                    "The following frame is defined more "
+                    f"than once: `{frame}`.",
+                    RuntimeWarning,
+                )
+            else:
+                frames.append(frame)
+
+        return frames
 
 
 class Actor(SdfElement):
@@ -1503,6 +1589,19 @@ class World(SdfElement):
     states = ChildElement(State, "*")
     populations = ChildElement(Population, "*")
 
+    def declared_frames(self, *, is_root: bool = True) -> List[str]:
+        frames = ["world"]
+        for frame in super().declared_frames(is_root=False):
+            if frame in frames:
+                warnings.warn(
+                    "The following frame is defined more "
+                    f"than once: `{frame}`.",
+                    RuntimeWarning,
+                )
+            else:
+                frames.append(frame)
+        return frames
+
 
 class SDF(SdfElement):
     """SDFormat Root Element
@@ -1539,3 +1638,17 @@ class SDF(SdfElement):
         ET.ElementTree(self.to_etree()).write(
             path, xml_declaration=True, pretty_print=pretty_print
         )
+
+    def declared_frames(self, *, is_root: bool = True) -> List[str]:
+        frames = list()
+        for child in self.children:
+            for frame in child.declared_frames(is_root=True):
+                if frame in frames:
+                    warnings.warn(
+                        "The following frame is defined more "
+                        f"than once: `{frame}`.",
+                        RuntimeWarning,
+                    )
+                else:
+                    frames.append(frame)
+        return frames
