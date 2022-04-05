@@ -291,7 +291,7 @@ for link in element.iter("model/model/link"):
     link.self_collide = True
 
 # turn self-collision off (using a different syntax)
-for link in element.models[0].iter("link"):
+for link in element.model.iter("link"):
     link.self_collide = False
 
 # offset all links by some vector

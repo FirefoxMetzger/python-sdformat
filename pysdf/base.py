@@ -199,7 +199,7 @@ class SdfElement:
 
         return frames
 
-    def to_dict(self, *, sep:str="/") -> Dict[str, "SdfElement"]:
+    def to_dict(self, *, sep: str = "/") -> Dict[str, "SdfElement"]:
         """Convert the element into a dict.
 
         Returns a flat representation of this element's tree in the form of a
@@ -238,7 +238,6 @@ class SdfElement:
             flat_tree.update(map(add_prefix, child.to_dict(sep=sep).items()))
 
         return flat_tree
-
 
 
 class UnknownElement(SdfElement):
@@ -1065,8 +1064,6 @@ class Joint(SdfElement):
                 stripped_text = " ".join(self.text.split())
                 return tuple(map(float, stripped_text.split(" ")))
 
-
-
         class Dynamics(SdfElement):
             tag = "dynamics"
 
@@ -1088,7 +1085,6 @@ class Joint(SdfElement):
         xyz = ChildElement(Xyz, "0")
         dynamics = ChildElement(Dynamics, "0")
         limit = ChildElement(Limit, "0")
-
 
     class Axis2(Axis):
         tag = "axis2"
@@ -1651,7 +1647,6 @@ class World(SdfElement):
         camera = ChildElement(Camera, "0")
         plugins = ChildElement(Plugin, "*")
 
-
     class Road(SdfElement):
         tag = "road"
 
@@ -1693,14 +1688,13 @@ class World(SdfElement):
             length = FloatElement("1", 1)
 
         name = Attribute(str, "1")
-        
+
         model_count = IntegerElement("1", 1)
         distribution = ChildElement(Distribution, "1")
         box = ChildElement(Box, "0")
         cylinder = ChildElement(Cylinder, "0")
         pose = ChildElement(Pose, "0")
         models = ChildElement(Model, "*")
-
 
     tag = "world"
     name = Attribute(str, "1")

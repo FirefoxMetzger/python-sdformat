@@ -119,7 +119,7 @@ def test_declared_frames():
         </model>
     </sdf>
     """
-    
+
     element = SDF.from_xml(sample_sdf)
     frames = element.declared_frames()
     assert frames == [
@@ -131,5 +131,5 @@ def test_declared_frames():
         "nested_model",
         "nested_model::link1",
         "nested_model::inner_joint",
-        "nested_model::link2"
+        "nested_model::link2",
     ]
