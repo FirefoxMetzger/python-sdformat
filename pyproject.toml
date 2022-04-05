@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "python-sdformat"
-version = "0.3.0"
+version = "0.4.0"
 description = "Python Parser for SDFormat files."
 authors = ["FirefoxMetzger <sebastian@wallkoetter.net>"]
 license = "BSD-2-Clause"
