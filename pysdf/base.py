@@ -1625,6 +1625,33 @@ class World(SdfElement):
     class Gui(SdfElement):
         tag = "gui"
 
+        class Camera(SdfElement):
+            tag = "camera"
+
+            class TrackVisual(SdfElement):
+                tag = "track_visual"
+
+                name = StringElement("0", "__default__")
+                min_dist = FloatElement("0", 0)
+                max_dist = FloatElement("0", 0)
+                static = BoolElement("0", False)
+                use_model_frame = BoolElement("0", True)
+                xyz = Vector3("0", "-5 0 3")
+                inherit_yaw = BoolElement("0", False)
+
+            name = Attribute(str, "1", default="user_camera")
+
+            view_controller = StringElement("0", "orbit")
+            projection_type = StringElement("0", "perspective")
+            track_visual = ChildElement(TrackVisual, "0")
+            pose = ChildElement(Pose, "0")
+
+        fullscreen = Attribute(bool, "0")
+
+        camera = ChildElement(Camera, "0")
+        plugins = ChildElement(Plugin, "*")
+
+
     class Road(SdfElement):
         tag = "road"
 
