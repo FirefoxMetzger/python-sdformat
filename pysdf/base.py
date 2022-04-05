@@ -1,3 +1,4 @@
+from tokenize import String
 from typing import Dict, List, Set, Type, Union, Iterable, Any
 import lxml.etree as ET
 import warnings
@@ -1634,6 +1635,13 @@ class World(SdfElement):
 
     class SphericalCoordinates(SdfElement):
         tag = "spherical_coordinates"
+
+        surface_model = StringElement("1", "EARTH_WGS84")
+        world_frame_orientation = StringElement("1", "ENU")
+        latitude_deg = FloatElement("1", 0)
+        longitude_deg = FloatElement("1", 0)
+        elevation = FloatElement("1", 0)
+        heading_deg = FloatElement("1", 0)
 
     class Population(SdfElement):
         tag = "population"
