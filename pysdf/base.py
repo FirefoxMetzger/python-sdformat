@@ -1,6 +1,7 @@
 from typing import Dict, List, Set, Type, Union, Iterable, Any
 import lxml.etree as ET
 import warnings
+from pathlib import Path
 
 from .sdf_types import *
 
@@ -189,14 +190,54 @@ class SdfElement:
             for frame in child.declared_frames(is_root=False):
                 if frame in frames:
                     warnings.warn(
-                        f"The following frame is defined more "
-                        "than once: `{frame}`.",
+                        f"The following frame is defined more " "than once: `{frame}`.",
                         RuntimeWarning,
                     )
                 else:
                     frames.append(frame)
 
         return frames
+
+    def to_dict(self, *, sep:str="/") -> Dict[str, "SdfElement"]:
+        """Convert the element into a dict.
+
+        Returns a flat representation of this element's tree in the form of a
+        dict. Dict keys correspond to the path from this node to the child and
+        values are this element's children. By default a child element's tag is
+        used for the key unless it has a ``name`` attribute, in which case the
+        name is used instead.
+
+        Parameters
+        ----------
+        sep : str
+            The separator to use between elements of the child's path.
+
+        Returns
+        -------
+        flat_tree : dict
+            A dictionary where keys are tree paths and values are elements.
+
+        """
+
+        if hasattr(self, "name"):
+            prefix = self.name
+        else:
+            prefix = self.tag
+
+        def add_prefix(item):
+            key, value = item
+            key = prefix + sep + key
+
+            return key, value
+
+        flat_tree = {prefix: self}
+        for child in self.children:
+            if isinstance(child, Comment):
+                continue
+            flat_tree.update(map(add_prefix, child.to_dict(sep=sep).items()))
+
+        return flat_tree
+
 
 
 class UnknownElement(SdfElement):
@@ -245,6 +286,24 @@ class Pose(SdfElement):
     relative_to = Attribute(str, "0")
     rotation_format = Attribute(str, "0", default="euler_rpy")
     degrees = Attribute(bool, "0", default=False)
+
+    @property
+    def value(self):
+        count = 6 if self.rotation_format == "euler_rpy" else 7
+
+        if self.text is None:
+            return (0.0,) * count
+
+        stripped_text = " ".join(self.text.split())
+        return tuple(map(float, stripped_text.split(" ")))
+
+    @property
+    def position(self):
+        return self.value[:3]
+
+    @property
+    def orientation(self):
+        return self.value[3:]
 
 
 class Noise(SdfElement):
@@ -997,6 +1056,16 @@ class Joint(SdfElement):
 
             expressed_in = Attribute(str, "0")
 
+            @property
+            def direction(self):
+                if self.text is None:
+                    return (0.0, 0.0, 1.0)
+
+                stripped_text = " ".join(self.text.split())
+                return tuple(map(float, stripped_text.split(" ")))
+
+
+
         class Dynamics(SdfElement):
             tag = "dynamics"
 
@@ -1018,6 +1087,10 @@ class Joint(SdfElement):
         xyz = ChildElement(Xyz, "0")
         dynamics = ChildElement(Dynamics, "0")
         limit = ChildElement(Limit, "0")
+
+
+    class Axis2(Axis):
+        tag = "axis2"
 
     class Physics(SdfElement):
         tag = "physics"
@@ -1066,7 +1139,7 @@ class Joint(SdfElement):
     gearbox_reference_bodx = StringElement("0", "__default__")
     thread_pitch = FloatElement("0", 1)
     axis = ChildElement(Axis, "0")
-    axsis2 = ChildElement(Axis, "0")
+    axis2 = ChildElement(Axis2, "0")
     physics = ChildElement(Physics, "0")
     pose = ChildElement(Pose, "0")
     sensor = ChildElement(Sensor, "0")
@@ -1076,8 +1149,7 @@ class Joint(SdfElement):
         for frame in super().declared_frames(is_root=False):
             if frame in frames:
                 warnings.warn(
-                    "The following frame is defined more "
-                    f"than once: `{frame}`.",
+                    f"The following frame is defined more than once: `{frame}`.",
                     RuntimeWarning,
                 )
             else:
@@ -1197,8 +1269,7 @@ class Link(SdfElement):
         for frame in super().declared_frames(is_root=False):
             if frame in frames:
                 warnings.warn(
-                    "The following frame is defined more "
-                    f"than once: `{frame}`.",
+                    f"The following frame is defined more than once: `{frame}`.",
                     RuntimeWarning,
                 )
             else:
@@ -1262,11 +1333,10 @@ class Model(SdfElement):
         for frame in super().declared_frames(is_root=False):
             if not is_root:
                 frame = self.name + "::" + frame
-            
+
             if frame in frames:
                 warnings.warn(
-                    "The following frame is defined more "
-                    f"than once: `{frame}`.",
+                    f"The following frame is defined more than once: `{frame}`.",
                     RuntimeWarning,
                 )
             else:
@@ -1557,11 +1627,45 @@ class World(SdfElement):
     class Road(SdfElement):
         tag = "road"
 
+        name = Attribute(str, "1")
+        width = FloatElement("1", 1)
+        point = Vector3("+", "0 0 0")
+        material = ChildElement(Material, "0")
+
     class SphericalCoordinates(SdfElement):
         tag = "spherical_coordinates"
 
     class Population(SdfElement):
         tag = "population"
+
+        class Distribution(SdfElement):
+            tag = "distribution"
+
+            type = StringElement("1", "random")
+            rows = IntegerElement("0", 1)
+            cols = IntegerElement("0", 1)
+            step = Vector3("0", ".5 .5 0")
+
+        class Box(SdfElement):
+            tag = "box"
+
+            size = Vector3("1", "1 1 1")
+
+        class Cylinder(SdfElement):
+            tag = "cylinder"
+
+            radius = FloatElement("1", 1)
+            length = FloatElement("1", 1)
+
+        name = Attribute(str, "1")
+        
+        model_count = IntegerElement("1", 1)
+        distribution = ChildElement(Distribution, "1")
+        box = ChildElement(Box, "0")
+        cylinder = ChildElement(Cylinder, "0")
+        pose = ChildElement(Pose, "0")
+        models = ChildElement(Model, "*")
+
 
     tag = "world"
     name = Attribute(str, "1")
@@ -1594,8 +1698,7 @@ class World(SdfElement):
         for frame in super().declared_frames(is_root=False):
             if frame in frames:
                 warnings.warn(
-                    "The following frame is defined more "
-                    f"than once: `{frame}`.",
+                    f"The following frame is defined more than once: `{frame}`.",
                     RuntimeWarning,
                 )
             else:
@@ -1632,7 +1735,11 @@ class SDF(SdfElement):
     @classmethod
     def from_file(cls, path: str, *, remove_blank_text: bool = False) -> "SDF":
         parser = ET.XMLParser(remove_blank_text=remove_blank_text)
-        return SDF.from_etree(ET.parse(str(path), parser).getroot())
+
+        if isinstance(path, Path):
+            path = str(path)
+
+        return SDF.from_etree(ET.parse(path, parser).getroot())
 
     def to_file(self, path: str, *, pretty_print: bool = False) -> None:
         ET.ElementTree(self.to_etree()).write(
@@ -1645,8 +1752,7 @@ class SDF(SdfElement):
             for frame in child.declared_frames(is_root=True):
                 if frame in frames:
                     warnings.warn(
-                        "The following frame is defined more "
-                        f"than once: `{frame}`.",
+                        f"The following frame is defined more than once: `{frame}`.",
                         RuntimeWarning,
                     )
                 else:
